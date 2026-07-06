@@ -1,0 +1,18 @@
+# Core
+faster-whisper>=1.1.0
+torch>=2.0.0
+numpy>=1.24
+huggingface-hub>=0.24.0
+
+# Audio capture
+sounddevice>=0.5.0
+
+# Keyboard hooking
+keyboard>=0.13.5
+
+# Clipboard
+pyperclip>=1.9.0
+
+# System tray
+pystray>=0.19.0
+Pillow>=10.0.0

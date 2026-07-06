@@ -7,6 +7,7 @@ from typing import Optional
 
 from config import load_config, save_config
 from hotkey_listener import HotkeyListener
+from version_checker import check_update_async
 from audio_recorder import AudioRecorder
 from whisper_engine import WhisperEngine
 from clipboard_handler import ClipboardHandler
@@ -132,6 +133,7 @@ class WhisperDict:
     def start(self) -> None:
         logger.info('Starting Whisper Dict')
         logger.info('Hotkey: %s  Model: %s', self.config.hotkey, self.config.model_size)
+        check_update_async()
         self.overlay.start()
         self.hotkey.start()
         if self.tray:

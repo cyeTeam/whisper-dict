@@ -2,6 +2,7 @@
 Whisper Dict - Setup Wizard
 
 Interactive CLI installer/configure for the local Whisper dictation service.
+Install: iex (iwr -UseBasicParsing https://raw.githubusercontent.com/cyeTeam/whisper-dict/master/install.ps1).Content
 """
 
 import os

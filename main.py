@@ -31,7 +31,7 @@ class State(Enum):
     TRANSCRIBING = 2
 
 
-class DictationService:
+class WhisperDict:
     def __init__(self):
         self.config = load_config()
         self.enabled = True
@@ -160,5 +160,5 @@ class DictationService:
 
 
 if __name__ == '__main__':
-    service = DictationService()
+    service = WhisperDict()
     service.start()

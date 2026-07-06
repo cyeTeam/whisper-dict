@@ -9,7 +9,7 @@ from PIL import Image, ImageDraw
 logger = logging.getLogger('dictation.tray')
 
 if TYPE_CHECKING:
-    from main import DictationService
+    from main import WhisperDict
 
 ICON_SIZE = 64
 COLOR_IDLE = (100, 150, 255)
@@ -35,7 +35,7 @@ def _make_icon(color, size=ICON_SIZE):
 
 
 class TrayUI:
-    def __init__(self, service: 'DictationService'):
+    def __init__(self, service: 'WhisperDict'):
         self.service = service
         self._icon: Optional[pystray.Icon] = None
         self._menu_lock = threading.Lock()

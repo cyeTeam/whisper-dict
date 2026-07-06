@@ -64,29 +64,44 @@ if (-not $SetupOnly) {
     Remove-Item -Path $zipPath -Force
 
     # Venv + deps
-    Write-Output "  Creating virtual environment ..."
-    $venvOk = python -m venv $VenvDir
-    if (-not $?) {
-        Write-Output (Color 91 "[FAIL] venv creation failed")
-        exit 1
-    }
-    $pip = Join-Path $VenvDir 'Scripts' 'pip.exe'
-    Write-Output "  Installing dependencies (may take a few minutes) ..."
-    & $pip install -r (Join-Path $InstallDir 'requirements.txt')
-    if (-not $?) {
-        Write-Output (Color 91 "[FAIL] pip install failed")
-        exit 1
+    Write-Output ""
+    $useVenv = Read-Host "  Create virtual environment (recommended)? [Y/n]"
+    $useVenv = ($useVenv -eq '' -or $useVenv -eq 'y' -or $useVenv -eq 'yes')
+
+    if ($useVenv) {
+        Write-Output "  Creating virtual environment ..."
+        python -m venv $VenvDir
+        if (-not $?) {
+            Write-Output (Color 91 "[FAIL] venv creation failed")
+            exit 1
+        }
+        $pip = "$VenvDir\Scripts\pip.exe"
+        Write-Output "  Installing dependencies (may take a few minutes) ..."
+        & $pip install -r "$InstallDir\requirements.txt"
+        if (-not $?) {
+            Write-Output (Color 91 "[FAIL] pip install failed")
+            exit 1
+        }
+    } else {
+        Write-Output "  Skipping venv, using system Python."
+        Write-Output "  Installing dependencies (may take a few minutes) ..."
+        pip install -r "$InstallDir\requirements.txt"
+        if (-not $?) {
+            Write-Output (Color 91 "[FAIL] pip install failed")
+            exit 1
+        }
     }
 
     # Create launcher
     Write-Output "  Creating launcher script ..."
     New-Item -ItemType Directory -Force -Path $BinDir | Out-Null
-    $pythonw = Join-Path $VenvDir 'Scripts' 'pythonw.exe'
-    $python = Join-Path $VenvDir 'Scripts' 'python.exe'
-@"
-@echo off
-"%~dp0..\venv\Scripts\pythonw.exe" "%~dp0..\main.py" %*
-"@ | Out-File -FilePath $Launcher -Encoding ascii
+    if ($useVenv) {
+        '@echo off
+"%~dp0..\venv\Scripts\pythonw.exe" "%~dp0..\main.py" %*' | Out-File -FilePath $Launcher -Encoding ascii
+    } else {
+        '@echo off
+python "%~dp0..\main.py" %*' | Out-File -FilePath $Launcher -Encoding ascii
+    }
 
     # Add to PATH
     $userPath = [Environment]::GetEnvironmentVariable('PATH', 'User')
@@ -105,7 +120,7 @@ if (-not $SetupOnly) {
 }
 
 # Run setup wizard
-$setupPython = Join-Path $VenvDir 'Scripts' 'python.exe'
+$setupPython = "$VenvDir\Scripts\python.exe"
 if (Test-Path $setupPython) {
     & $setupPython $SetupPy
 } else {

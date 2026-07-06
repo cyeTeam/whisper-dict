@@ -94,6 +94,7 @@ class OverlayIndicator:
         self._color = COLOR_IDLE
         self._thread: Optional[threading.Thread] = None
         self._ready = threading.Event()
+        self._lock = threading.Lock()
         self._wnd_proc_cb: Optional[WndProcType] = None
 
     def _wnd_proc(self, hwnd: int, msg: int, wparam: int, lparam: int) -> int:
@@ -183,10 +184,17 @@ class OverlayIndicator:
             user32.TranslateMessage(ctypes.byref(msg))
             user32.DispatchMessageW(ctypes.byref(msg))
 
+        with self._lock:
+            self._hwnd = None
+            self._running = False
+            self._ready.clear()
+
     def start(self) -> None:
-        if self._running:
-            return
-        self._running = True
+        with self._lock:
+            if self._running:
+                return
+            self._running = True
+            self._ready.clear()
         self._thread = threading.Thread(target=self._thread_run, daemon=True)
         self._thread.start()
         self._ready.wait()
@@ -202,12 +210,23 @@ class OverlayIndicator:
 
     def _set_color(self, color: int) -> None:
         self._color = color
-        if self._hwnd:
-            user32.InvalidateRect(self._hwnd, None, True)
-            user32.UpdateWindow(self._hwnd)
+        with self._lock:
+            hwnd = self._hwnd
+            running = self._running
+        if hwnd and user32.IsWindow(hwnd):
+            user32.InvalidateRect(hwnd, None, True)
+            user32.UpdateWindow(hwnd)
+        elif not running:
+            self.start()
+            with self._lock:
+                if self._hwnd:
+                    user32.InvalidateRect(self._hwnd, None, True)
+                    user32.UpdateWindow(self._hwnd)
 
     def stop(self) -> None:
-        self._running = False
-        if self._hwnd:
-            user32.PostMessageW(self._hwnd, 0x0010, 0, 0)
+        with self._lock:
+            self._running = False
+            hwnd = self._hwnd
             self._hwnd = None
+        if hwnd and user32.IsWindow(hwnd):
+            user32.PostMessageW(hwnd, 0x0010, 0, 0)
